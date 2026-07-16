@@ -4,7 +4,7 @@ SELECT
     {{ clean_email('c.email') }} AS email,
     c.state,
     c.city,
-    s.region
+   -- s.region
 
 FROM {{ source('BRONZE', 'CUSTOMERS') }} AS c
 
