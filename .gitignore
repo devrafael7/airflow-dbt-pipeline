@@ -18,6 +18,7 @@ dbt_packages/
 # Airflow
 airflow/logs/
 airflow.db
+airflow/.env
 
 # Sistema e editores
 .vscode/

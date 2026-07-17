@@ -1,14 +1,36 @@
-from airflow import DAG #importa DAG do airflow para utilizar
-from airflow.operators.bash import BashOperator #importa BashOperator para executar comandos do terminal
-from datetime import datetime #importa data e hora 
+from airflow import DAG
+from airflow.operators.bash import BashOperator
+from datetime import datetime
 
-with DAG( #inicializa DAG 
-    dag_id="dbt_run_dag", #passa id da DAG 
-    start_date=datetime(2026, 1, 1), #inicializa no primeiro dia e mês de 2026
-    schedule=None, #sem schedule para rodar
-    catchup=False, 
-) as dag: #como uma DAG execute:
-    dbt_run = BashOperator( # BashOperator com id da task e o comando escrito
-        task_id="dbt_run", 
-        bash_command="cd /opt/airflow/dbt && dbt run", #entre na pasta airflow/dbt do container e rode "dbt run"
+with DAG(
+    dag_id="ecommerce_pipeline",
+    start_date=datetime(2024, 1, 1),
+    schedule="@daily",
+    catchup=False,
+) as dag:
+
+    ingest_data = BashOperator(
+    task_id="ingest_dummyjson_to_snowflake",
+    bash_command=(
+        "python /opt/airflow/ingestion/"
+        "ingest_dummyjson.py"
+    ),
+)
+
+    dbt_run = BashOperator(
+        task_id="dbt_run",
+        bash_command=(
+            "cd /opt/airflow/dbt && "
+            "dbt run --profiles-dir /home/airflow/.dbt"
+        ),
     )
+
+    dbt_test = BashOperator(
+        task_id="dbt_test",
+        bash_command=(
+            "cd /opt/airflow/dbt && "
+            "dbt test --profiles-dir /home/airflow/.dbt"
+        ),
+    )
+
+    ingest_data >> dbt_run >> dbt_test

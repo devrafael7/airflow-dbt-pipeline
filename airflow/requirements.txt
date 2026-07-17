@@ -1,1 +1,3 @@
 dbt-snowflake==1.8.0
+requests
+snowflake-connector-python
