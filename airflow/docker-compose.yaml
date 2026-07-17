@@ -46,10 +46,8 @@
 ---
 x-airflow-common:
   &airflow-common
-  # In order to add custom dependencies or upgrade provider packages you can use your extended image.
-  # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
-  # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
   build: .
+
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -59,25 +57,28 @@ x-airflow-common:
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
-    AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
-    # yamllint disable rule:line-length
-    # Use simple http server on scheduler for health checks
-    # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
-    # yamllint enable rule:line-length
+    AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
-    # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
-    # for other purpose (development, test and especially production usage) build/extend Airflow image.
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
-    # The following line can be used to set a custom config file, stored in the local config folder
-    # If you want to use it, outcomment it and replace airflow.cfg with the name of your config file
-    # AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
-  volumes: #volumes necessários para container. Utiliza várivavel padrão, porém usa o diretório atual caso não exista
-    - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags #envia ou cria pasta "dags" para o container airflow 
-    - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs #envia ou cria pasta "logs" para o container airflow 
-    - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config  #envia ou cria pasta "config " para o container airflow 
-    - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins #envia ou cria pasta "plugins" para o container airflow 
-    - ../dbt:/opt/airflow/dbt  #envia pasta dbt que está fora desse diretório utilizando "../" para dentro do container airflow
-    - /mnt/c/Users/PICHAU/.dbt:/home/airflow/.dbt #procura o arquivo profiles.yml através do "home/" e envia pro container
+
+    # Snowflake
+    SNOWFLAKE_ACCOUNT: ${SNOWFLAKE_ACCOUNT}
+    SNOWFLAKE_USER: ${SNOWFLAKE_USER}
+    SNOWFLAKE_PASSWORD: ${SNOWFLAKE_PASSWORD}
+    SNOWFLAKE_WAREHOUSE: ${SNOWFLAKE_WAREHOUSE}
+    SNOWFLAKE_DATABASE: ${SNOWFLAKE_DATABASE}
+    SNOWFLAKE_SCHEMA: ${SNOWFLAKE_SCHEMA}
+    SNOWFLAKE_ROLE: ${SNOWFLAKE_ROLE}
+
+  volumes:
+    - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
+    - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
+    - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
+    - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
+    - ../dbt:/opt/airflow/dbt
+    - /mnt/c/Users/PICHAU/.dbt:/home/airflow/.dbt
+    - ../ingestion:/opt/airflow/ingestion
+
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on #depende da saúde dos serviços pra rodar o airflow

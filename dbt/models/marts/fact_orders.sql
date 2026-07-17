@@ -5,8 +5,7 @@ SELECT
 
     c.customer_id,
     c.full_name,
-    c.region,
-
+    
     p.product_id,
     p.product_name,
     p.price,
@@ -17,8 +16,8 @@ SELECT
 
 FROM {{ ref('stg_orders') }} o
 
-LEFT JOIN {{ ref('stg_customers') }} c
+RIGHT JOIN {{ ref('stg_customers') }} c
     ON o.customer_id = c.customer_id
 
-LEFT JOIN {{ ref('stg_products') }} p
+RIGHT JOIN {{ ref('stg_products') }} p
     ON o.product_id = p.product_id
